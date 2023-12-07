@@ -19,6 +19,7 @@ public class IRoadTrip {
             System.exit(1);
         }
         initializeValidCountries();
+        dataLoader.printBordersMap();
     }
 
     public int getDistance(String country1, String country2) {
@@ -33,39 +34,41 @@ public class IRoadTrip {
     }
 
     public List<String> findPath(String country1, String country2) {
+        country1 = country1.trim().toLowerCase();
+        country2 = country2.trim().toLowerCase();
+
         Map<String, Integer> distances = new HashMap<>();
         Map<String, String> predecessors = new HashMap<>();
-        Set<String> visited = new HashSet<>();
+        PriorityQueue<Node> queue = new PriorityQueue<>(Comparator.comparingInt(n -> n.distance));
 
+        // Initialize distances and queue
         for (String country : validCountries) {
             distances.put(country, Integer.MAX_VALUE);
             predecessors.put(country, null);
         }
-
         distances.put(country1, 0);
-
-        PriorityQueue<Node> queue = new PriorityQueue<>(Comparator.comparingInt(n -> n.distance));
         queue.add(new Node(country1, 0));
 
         while (!queue.isEmpty()) {
             Node current = queue.poll();
+            System.out.println("Processing: " + current.countryName + " with distance " + current.distance);
 
-            if (!visited.add(current.countryName)) {
-                continue;
-            }
-
+            // Destination reached
             if (current.countryName.equals(country2)) {
-                break; // Destination reached
+                break;
             }
 
+            // Process each neighbor
             for (CountryDataLoader.Border border : dataLoader.getBordersMap().getOrDefault(current.countryName, Collections.emptyList())) {
                 String neighbor = border.getBorderCountry();
                 int newDist = current.distance + border.getDistance();
 
+                // Update if shorter path is found
                 if (newDist < distances.get(neighbor)) {
                     distances.put(neighbor, newDist);
                     predecessors.put(neighbor, current.countryName);
                     queue.add(new Node(neighbor, newDist));
+                    System.out.println("Updating path: " + neighbor + " with new distance " + newDist);
                 }
             }
         }
@@ -75,10 +78,12 @@ public class IRoadTrip {
 
     private List<String> reconstructPath(Map<String, String> predecessors, String start, String end) {
         LinkedList<String> path = new LinkedList<>();
-        for (String at = end; at != null; at = predecessors.get(at)) {
+        for (String at = end; at != null && !at.equals(start); at = predecessors.get(at)) {
             path.addFirst(at);
         }
-        if (path.getFirst().equals(start)) {
+        path.addFirst(start);
+
+        if (!path.isEmpty() && path.getFirst().equals(start)) {
             return path;
         }
         return Collections.emptyList(); // No path found
@@ -93,6 +98,7 @@ public class IRoadTrip {
             this.distance = distance;
         }
     }
+
 
     public void acceptUserInput() {
         Scanner scanner = new Scanner(System.in);

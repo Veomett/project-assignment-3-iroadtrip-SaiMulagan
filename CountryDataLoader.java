@@ -2,6 +2,7 @@ import java.util.*;
 import java.io.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.stream.Collectors;
 
 public class CountryDataLoader {
     private HashMap<String, List<Border>> bordersMap;
@@ -135,8 +136,18 @@ public class CountryDataLoader {
         if (aliasCountryName != null) {
             bordersMap.put(aliasCountryName, borders);
         }
+        System.out.println("Added borders for: " + mainCountryName + " - " + borders);
+
     }
 
+    public void printBordersMap() {
+        System.out.println("Borders Map: ");
+        for (Map.Entry<String, List<Border>> entry : bordersMap.entrySet()) {
+            System.out.println(entry.getKey() + " -> " + entry.getValue().stream()
+                    .map(Border::getBorderCountry)
+                    .collect(Collectors.toList()));
+        }
+    }
 
     // Getters for the data structures
     public HashMap<String, List<Border>> getBordersMap() {
