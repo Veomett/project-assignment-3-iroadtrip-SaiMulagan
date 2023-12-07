@@ -29,10 +29,10 @@ public class IRoadTrip {
         HashMap<String, Integer> distances = dataLoader.getCapitalDistances().get(country1);
         if (distances != null && distances.containsKey(country2)) {
             int distance = distances.get(country2);
-            System.out.println("Distance between " + country1 + " and " + country2 + ": " + distance);
+            //System.out.println("Distance between " + country1 + " and " + country2 + ": " + distance);
             return distance;
         } else {
-            System.out.println("No direct distance found between " + country1 + " and " + country2);
+            //System.out.println("No direct distance found between " + country1 + " and " + country2);
             return -1;
         }
     }
@@ -52,36 +52,39 @@ public class IRoadTrip {
 
         distances.put(country1, 0);
         queue.add(new Node(country1, 0));
+        Set<String> visited = new HashSet<>();
 
         while (!queue.isEmpty()) {
             Node current = queue.poll();
-            System.out.println("Processing: " + current.countryName + " with distance " + current.distance);
-
-            if (current.countryName.equals(country2)) {
-                break; // Destination reached
-            }
+            if (visited.contains(current.countryName)) continue; // Skip already visited countries
+            visited.add(current.countryName);
 
             List<CountryDataLoader.Border> neighbors = dataLoader.getBordersMap().get(current.countryName);
             if (neighbors == null || neighbors.isEmpty()) {
-                System.out.println("No neighbors found for " + current.countryName);
+                System.out.println("No neighbors found or all neighbors already visited for " + current.countryName);
                 continue;
             }
 
             for (CountryDataLoader.Border border : neighbors) {
+                String neighbor = border.getBorderCountry().toLowerCase();
+                if (visited.contains(neighbor)) continue;}
+
+            for (CountryDataLoader.Border border : neighbors) {
                 String neighbor = border.getBorderCountry().toLowerCase(); // Convert to lowercase
-                System.out.println("Checking neighbor: " + neighbor);
+                System.out.println("Checking neighbor: " + neighbor + " of " + current.countryName);
                 if (!validCountries.contains(neighbor)) {
-                    System.out.println("Neighbor not in valid countries: " + neighbor);
+                    System.out.println("Neighbor " + neighbor + " not in valid countries list");
                     continue;
                 }
 
                 int newDist = current.distance + border.getDistance();
-                System.out.println("Neighbor: " + neighbor + ", New Distance: " + newDist);
+                System.out.println("Neighbor: " + neighbor + ", Current Distance: " + distances.get(neighbor) + ", New Distance: " + newDist);
 
                 if (newDist < distances.get(neighbor)) {
                     distances.put(neighbor, newDist);
                     predecessors.put(neighbor, current.countryName);
                     queue.add(new Node(neighbor, newDist));
+                    System.out.println("Updated distance for " + neighbor + ". New predecessor: " + current.countryName);
                 }
             }
         }

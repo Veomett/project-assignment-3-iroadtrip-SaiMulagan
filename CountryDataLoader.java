@@ -24,6 +24,7 @@ public class CountryDataLoader {
         File file = new File(filePath);
         BufferedReader br = new BufferedReader(new FileReader(file));
         String line;
+        boolean isFirstLine = true;
         while ((line = br.readLine()) != null) {
             addBorderInfo(line);
         }
@@ -97,10 +98,11 @@ public class CountryDataLoader {
     }
 
 
+
     // Method to parse and add border information for each country
     private void addBorderInfo(String borderData) {
         String[] parts = borderData.split(" = ");
-        String country = parts[0].trim();
+        String country = parts[0].trim().toLowerCase(); // Convert country to lowercase
         List<Border> borders = new ArrayList<>();
 
         if (parts.length > 1) {
@@ -112,19 +114,22 @@ public class CountryDataLoader {
                 String borderCountry = borderParts[0];
                 int distance;
                 try {
-                    distance = Integer.parseInt(borderParts[1]);
+                    // Remove km and commas from the distance part, then parse it as an integer
+                    String distanceStr = borderParts[1].replace("km", "").replace(",", "").trim();
+                    distance = Integer.parseInt(distanceStr);
                 } catch (NumberFormatException e) {
                     System.err.println("Invalid distance for border: " + border);
                     continue;
                 }
 
-                borders.add(new Border(borderCountry.toLowerCase(), distance));
+                borders.add(new Border(borderCountry.toLowerCase(), distance)); // Convert border country to lowercase
                 System.out.println(country + " -> " + borderCountry + " " + distance + " km");
             }
         }
 
-        bordersMap.put(country.toLowerCase(), borders);
+        bordersMap.put(country, borders); // Country already converted to lowercase
     }
+
 
     public void printBordersMap() {
         System.out.println("Borders Map: ");
