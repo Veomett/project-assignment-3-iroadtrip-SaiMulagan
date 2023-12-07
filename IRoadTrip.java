@@ -1,11 +1,20 @@
 import java.util.List;
 import java.util.Scanner;
-
+import java.text.ParseException;
 public class IRoadTrip {
 
 
     public IRoadTrip (String [] args) {
-        // Replace with your code
+        if (args.length != 3) {
+            throw new IllegalArgumentException("Three file paths required: borders.txt, capdist.csv, state_name.tsv");
+        }
+        CountryDataLoader dataLoader = new CountryDataLoader();
+        try {
+            dataLoader.loadAllData(args[0], args[1], args[2]); // Load data from the files
+        } catch (IOException | ParseException e) {
+            e.printStackTrace();
+            System.exit(1); // Halts the implementation on failure
+        }
     }
 
 
@@ -23,18 +32,40 @@ public class IRoadTrip {
 
     public void acceptUserInput() {
         Scanner scanner = new Scanner(System.in);
-        System.out.println("Enter start country: ");
-        String start = scanner.nextLine();
-        System.out.println("Enter destination country: ");
-        String destination = scanner.nextLine();
 
-        List<String> path = findPath(start, destination);
-        int distance = getDistance(start, destination);
+        while (true) {
+            System.out.println("Enter the name of the first country (type EXIT to quit): ");
+            String start = scanner.nextLine();
+            if ("EXIT".equalsIgnoreCase(start)) break;
 
-        System.out.println("Path: " + path);
-        System.out.println("Total distance: " + distance + " km");
+            if (!isValidCountry(start)) {
+                System.out.println("Invalid country name. Please enter a valid country name.");
+                continue;
+            }
+
+            System.out.println("Enter the name of the second country (type EXIT to quit): ");
+            String destination = scanner.nextLine();
+            if ("EXIT".equalsIgnoreCase(destination)) break;
+
+            if (!isValidCountry(destination)) {
+                System.out.println("Invalid country name. Please enter a valid country name.");
+                continue;
+            }
+
+            List<String> path = findPath(start, destination);
+            if (path == null || path.isEmpty()) {
+                System.out.println("No valid path found.");
+            } else {
+                System.out.println("Route from " + start + " to " + destination + ":");
+                for (String step : path) {
+                    System.out.println("* " + step);
+                }
+            }
+        }
     }
 
+    private boolean isValidCountry(String start) {
+    }
 
 
     public static void main(String[] args) {
