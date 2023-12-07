@@ -40,17 +40,17 @@ public class CountryDataLoader {
             String countryB = data[3]; // Country code for country B
 
             // Debug print
-            System.out.println("Processing capdist data: " + line);
+            //System.out.println("Processing capdist data: " + line);
 
             int distance;
             try {
                 distance = Integer.parseInt(data[4].trim()); // Distance in km, with trimming
             } catch (NumberFormatException e) {
-                System.err.println("Error parsing distance for " + countryA + " and " + countryB);
+                //System.err.println("Error parsing distance for " + countryA + " and " + countryB);
                 continue; // Skip this line if the distance cannot be parsed
             }
 
-            System.out.println("Parsed distance: " + distance);
+            //System.out.println("Parsed distance: " + distance);
 
             capitalDistances.computeIfAbsent(countryA, k -> new HashMap<>()).put(countryB, distance);
             capitalDistances.computeIfAbsent(countryB, k -> new HashMap<>()).put(countryA, distance);
@@ -102,7 +102,7 @@ public class CountryDataLoader {
     // Method to parse and add border information for each country
     private void addBorderInfo(String borderData) {
         String[] parts = borderData.split(" = ");
-        String country = parts[0].trim().toLowerCase(); // Convert country to lowercase
+        String country = parts[0].trim().toLowerCase(); // Convert to lowercase for consistency
         List<Border> borders = new ArrayList<>();
 
         if (parts.length > 1) {
@@ -111,34 +111,28 @@ public class CountryDataLoader {
                 String[] borderParts = border.trim().split(" ");
                 if (borderParts.length < 2) continue;
 
-                String borderCountry = borderParts[0];
+                String borderCountry = borderParts[0].toLowerCase(); // Convert to lowercase
                 int distance;
                 try {
-                    // Remove km and commas from the distance part, then parse it as an integer
+                    // Remove "km", commas, and trim. Then parse as float and round to int
                     String distanceStr = borderParts[1].replace("km", "").replace(",", "").trim();
-                    distance = Integer.parseInt(distanceStr);
+                    distance = Math.round(Float.parseFloat(distanceStr));
                 } catch (NumberFormatException e) {
-                    System.err.println("Invalid distance for border: " + border);
+                    //System.err.println("Invalid distance for border: " + border);
                     continue;
                 }
 
-                borders.add(new Border(borderCountry.toLowerCase(), distance)); // Convert border country to lowercase
-                System.out.println(country + " -> " + borderCountry + " " + distance + " km");
+                borders.add(new Border(borderCountry, distance));
+                //System.out.println(country + " -> " + borderCountry + " " + distance + " km");
             }
         }
 
-        bordersMap.put(country, borders); // Country already converted to lowercase
+        bordersMap.put(country, borders);
     }
 
 
-    public void printBordersMap() {
-        System.out.println("Borders Map: ");
-        for (Map.Entry<String, List<Border>> entry : bordersMap.entrySet()) {
-            System.out.println(entry.getKey() + " -> " + entry.getValue().stream()
-                    .map(Border::getBorderCountry)
-                    .collect(Collectors.toList()));
-        }
-    }
+
+
 
     // Getters for the data structures
     public HashMap<String, List<Border>> getBordersMap() {

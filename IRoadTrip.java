@@ -19,7 +19,7 @@ public class IRoadTrip {
             System.exit(1);
         }
         initializeValidCountries();
-        dataLoader.printBordersMap();
+
     }
 
     public int getDistance(String country1, String country2) {
@@ -71,20 +71,20 @@ public class IRoadTrip {
 
             for (CountryDataLoader.Border border : neighbors) {
                 String neighbor = border.getBorderCountry().toLowerCase(); // Convert to lowercase
-                System.out.println("Checking neighbor: " + neighbor + " of " + current.countryName);
+                //System.out.println("Checking neighbor: " + neighbor + " of " + current.countryName);
                 if (!validCountries.contains(neighbor)) {
-                    System.out.println("Neighbor " + neighbor + " not in valid countries list");
+                    //System.out.println("Neighbor " + neighbor + " not in valid countries list");
                     continue;
                 }
 
                 int newDist = current.distance + border.getDistance();
-                System.out.println("Neighbor: " + neighbor + ", Current Distance: " + distances.get(neighbor) + ", New Distance: " + newDist);
+                //System.out.println("Neighbor: " + neighbor + ", Current Distance: " + distances.get(neighbor) + ", New Distance: " + newDist);
 
                 if (newDist < distances.get(neighbor)) {
                     distances.put(neighbor, newDist);
                     predecessors.put(neighbor, current.countryName);
                     queue.add(new Node(neighbor, newDist));
-                    System.out.println("Updated distance for " + neighbor + ". New predecessor: " + current.countryName);
+                    //System.out.println("Updated distance for " + neighbor + ". New predecessor: " + current.countryName);
                 }
             }
         }
