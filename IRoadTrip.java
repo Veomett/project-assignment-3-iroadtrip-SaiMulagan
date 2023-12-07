@@ -1,20 +1,27 @@
 import java.util.List;
-import java.util.Scanner;
+import java.io.IOException;
+import java.util.*;
+import java.util.stream.Collectors;
 import java.text.ParseException;
-public class IRoadTrip {
 
+public class IRoadTrip {
+    private Set<String> validCountries; // Set containing all valid country names
+    private CountryDataLoader dataLoader;
 
     public IRoadTrip (String [] args) {
-        if (args.length != 3) {
-            throw new IllegalArgumentException("Three file paths required: borders.txt, capdist.csv, state_name.tsv");
-        }
+        dataLoader = new CountryDataLoader();
+        String bordersFilePath = "/Users/sai/Documents/Project3/borders.txt";
+        String capDistFilePath = "/Users/sai/Documents/Project3/capdist.csv";
+        String stateNameFilePath = "/Users/sai/Documents/Project3/state_name.tsv";
+
         CountryDataLoader dataLoader = new CountryDataLoader();
         try {
-            dataLoader.loadAllData(args[0], args[1], args[2]); // Load data from the files
-        } catch (IOException | ParseException e) {
+            dataLoader.loadAllData(bordersFilePath, capDistFilePath, stateNameFilePath); // Load data from the files
+        } catch (IOException e) {
             e.printStackTrace();
             System.exit(1); // Halts the implementation on failure
         }
+        initializeValidCountries();
     }
 
 
@@ -64,7 +71,26 @@ public class IRoadTrip {
         }
     }
 
-    private boolean isValidCountry(String start) {
+    public boolean isValidCountry(String country) {
+        return validCountries.contains(country.trim().toLowerCase());
+    }
+    private void initializeValidCountries() {
+        validCountries = new HashSet<>();
+
+        // Assuming dataLoader has methods to get borders and country codes
+        Map<String, List<CountryDataLoader.Border>> bordersMap = dataLoader.getBordersMap();
+        Map<String, String> countryCodes = dataLoader.getCountryCodes();
+
+        // Add countries from bordersMap
+        validCountries.addAll(bordersMap.keySet());
+
+        // Add countries from countryCodes (if different from bordersMap)
+        validCountries.addAll(countryCodes.keySet());
+
+        // Convert all entries to lowercase for case-insensitive matching
+        validCountries = validCountries.stream()
+                .map(String::toLowerCase)
+                .collect(Collectors.toSet());
     }
 
 

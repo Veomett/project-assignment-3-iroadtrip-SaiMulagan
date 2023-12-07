@@ -14,10 +14,10 @@ public class CountryDataLoader {
         countryCodes = new HashMap<>();
     }
 
-    public void loadAllData() throws IOException {
-        loadBordersData("/users/Sai/Documents/Project3/borders.txt");
-        loadCapDistData("/users/Sai/Documents/Project3/capdist.csv");
-        loadCountryCodes("/users/Sai/Documents/Project3/state_name.tsv");
+    public void loadAllData(String bordersFilePath, String capDistFilePath, String stateNameFilePath) throws IOException {
+        loadBordersData(bordersFilePath);
+        loadCapDistData(capDistFilePath);
+        loadCountryCodes(stateNameFilePath);
     }
     public void loadBordersData(String filePath) throws IOException {
         File file = new File(filePath);
