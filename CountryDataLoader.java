@@ -73,6 +73,8 @@ public class CountryDataLoader {
 
     // Method to parse and add border information for each country
     private void addBorderInfo(String borderData) {
+        System.out.println("Processing border data: " + borderData); // Debug statement
+
         String[] parts = borderData.split(" = ");
         String country = parts[0];
         List<Border> borders = new ArrayList<>();
@@ -85,16 +87,24 @@ public class CountryDataLoader {
         if (parts.length > 1) {
             String[] borderingCountries = parts[1].split(";");
             for (String border : borderingCountries) {
+                System.out.println("Processing border: " + border); // Debug statement
                 String[] borderInfo = border.trim().split(" ");
                 String borderCountry = borderInfo[0];
-                int distance = borderInfo.length > 1 ? Integer.parseInt(borderInfo[1].split("km")[0].trim()) : 0;
-                borders.add(new Border(borderCountry, distance));
+
+                if (borderInfo.length > 1) {
+                    String distanceStr = borderInfo[1].split("km")[0].trim().replace(",", "");
+                    System.out.println("Parsed distance string: " + distanceStr); // Debug statement
+                    int distance = Integer.parseInt(distanceStr);
+                    borders.add(new Border(borderCountry, distance));
+                } else {
+                    borders.add(new Border(borderCountry, 0));
+                }
             }
         }
 
         bordersMap.put(mainCountryName, borders);
         if (aliasCountryName != null) {
-            bordersMap.put(aliasCountryName, borders); // Add the same border list for the alias
+            bordersMap.put(aliasCountryName, borders);
         }
     }
 
