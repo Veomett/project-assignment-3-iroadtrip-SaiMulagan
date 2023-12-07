@@ -1,5 +1,7 @@
 import java.util.*;
 import java.io.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 
 public class CountryDataLoader {
     private HashMap<String, List<Border>> bordersMap;
@@ -44,13 +46,26 @@ public class CountryDataLoader {
     private void loadCountryCodes(String filePath) throws IOException {
         File file = new File(filePath);
         BufferedReader br = new BufferedReader(new FileReader(file));
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        HashMap<String, Date> latestEntryDate = new HashMap<>();
         String line;
+
         while ((line = br.readLine()) != null) {
             String[] data = line.split("\t");
             String countryName = data[2].split(" \\(")[0].split("/")[0]; // Country name
             String countryCode = data[1]; // Country code
+            Date endDate = null; // End date
+            try {
+                endDate = sdf.parse(data[4]);
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
 
-            countryCodes.put(countryName.toLowerCase(), countryCode);
+            // Update only if the entry is the most recent
+            if (!latestEntryDate.containsKey(countryName) || latestEntryDate.get(countryName).before(endDate)) {
+                latestEntryDate.put(countryName, endDate);
+                countryCodes.put(countryName.toLowerCase(), countryCode);
+            }
         }
         br.close();
     }
