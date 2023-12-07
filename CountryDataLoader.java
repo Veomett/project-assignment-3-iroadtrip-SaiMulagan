@@ -60,24 +60,27 @@ public class CountryDataLoader {
         File file = new File(filePath);
         BufferedReader br = new BufferedReader(new FileReader(file));
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        HashMap<String, Date> latestEntryDate = new HashMap<>();
         String line;
+        boolean firstLine = true; // To skip the header if it exists
 
         while ((line = br.readLine()) != null) {
-            String[] data = line.split("\t");
-            String countryName = data[2].split(" \\(")[0].split("/")[0]; // Country name
-            String countryCode = data[1]; // Country code
-            Date endDate = null; // End date
-            try {
-                endDate = sdf.parse(data[4]);
-            } catch (ParseException e) {
-                e.printStackTrace();
+            if (firstLine) {
+                firstLine = false;
+                continue; // Skip the header line
             }
 
-            // Update only if the entry is the most recent
-            if (!latestEntryDate.containsKey(countryName) || latestEntryDate.get(countryName).before(endDate)) {
-                latestEntryDate.put(countryName, endDate);
-                countryCodes.put(countryName.toLowerCase(), countryCode);
+            String[] data = line.split("\t");
+            String countryCode = data[1]; // Assuming this is the country code
+            String countryName = data[2]; // Assuming this is the country name
+
+            try {
+                // Parse the end date to ensure it's a valid date
+                Date endDate = sdf.parse(data[4]);
+                // Add the country code and name to your data structure
+                // ...
+            } catch (ParseException e) {
+                System.err.println("Error parsing date for country: " + countryName);
+                continue; // Skip this line if the date cannot be parsed
             }
         }
         br.close();
