@@ -32,58 +32,64 @@ public class IRoadTrip {
         return -1;
     }
 
-    public List<String> findPath(String startCountry, String endCountry) {
-        startCountry = startCountry.trim().toLowerCase();
-        endCountry = endCountry.trim().toLowerCase();
-
+    public List<String> findPath(String country1, String country2) {
         Map<String, Integer> distances = new HashMap<>();
         Map<String, String> predecessors = new HashMap<>();
-        PriorityQueue<Node> queue = new PriorityQueue<>(Comparator.comparingInt(n -> n.distance));
+        Set<String> visited = new HashSet<>();
 
-        // Initialize distances and predecessors
         for (String country : validCountries) {
             distances.put(country, Integer.MAX_VALUE);
             predecessors.put(country, null);
         }
-        distances.put(startCountry, 0);
-        queue.add(new Node(startCountry, 0));
 
-        // Dijkstra's algorithm
+        distances.put(country1, 0);
+
+        PriorityQueue<Node> queue = new PriorityQueue<>(Comparator.comparingInt(n -> n.distance));
+        queue.add(new Node(country1, 0));
+
         while (!queue.isEmpty()) {
             Node current = queue.poll();
-            if (current.country.equals(endCountry)) {
-                break; // Reached destination
+
+            if (!visited.add(current.countryName)) {
+                continue;
             }
 
-            int currentDistance = distances.get(current.country);
-            for (CountryDataLoader.Border border : dataLoader.getBordersMap().getOrDefault(current.country, new ArrayList<>())) {
-                String neighbor = border.getBorderCountry();
-                int newDistance = currentDistance + border.getDistance();
+            if (current.countryName.equals(country2)) {
+                break; // Destination reached
+            }
 
-                if (newDistance < distances.get(neighbor)) {
-                    distances.put(neighbor, newDistance);
-                    predecessors.put(neighbor, current.country);
-                    queue.add(new Node(neighbor, newDistance));
+            for (CountryDataLoader.Border border : dataLoader.getBordersMap().getOrDefault(current.countryName, Collections.emptyList())) {
+                String neighbor = border.getBorderCountry();
+                int newDist = current.distance + border.getDistance();
+
+                if (newDist < distances.get(neighbor)) {
+                    distances.put(neighbor, newDist);
+                    predecessors.put(neighbor, current.countryName);
+                    queue.add(new Node(neighbor, newDist));
                 }
             }
         }
 
-        // Reconstruct the path
-        List<String> path = new ArrayList<>();
-        for (String at = endCountry; at != null; at = predecessors.get(at)) {
-            path.add(at);
-        }
-        Collections.reverse(path);
+        return reconstructPath(predecessors, country1, country2);
+    }
 
-        return path.size() > 1 ? path : null; // Return null if no path found
+    private List<String> reconstructPath(Map<String, String> predecessors, String start, String end) {
+        LinkedList<String> path = new LinkedList<>();
+        for (String at = end; at != null; at = predecessors.get(at)) {
+            path.addFirst(at);
+        }
+        if (path.getFirst().equals(start)) {
+            return path;
+        }
+        return Collections.emptyList(); // No path found
     }
 
     private static class Node {
-        String country;
+        String countryName;
         int distance;
 
-        Node(String country, int distance) {
-            this.country = country;
+        Node(String countryName, int distance) {
+            this.countryName = countryName;
             this.distance = distance;
         }
     }
