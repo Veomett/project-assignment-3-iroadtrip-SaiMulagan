@@ -36,13 +36,26 @@ public class CountryDataLoader {
             String[] data = line.split(",");
             String countryA = data[1]; // Country code for country A
             String countryB = data[3]; // Country code for country B
-            int distance = Integer.parseInt(data[4]); // Distance in km
+
+            // Debug print
+            System.out.println("Processing capdist data: " + line);
+
+            int distance;
+            try {
+                distance = Integer.parseInt(data[4].trim()); // Distance in km, with trimming
+            } catch (NumberFormatException e) {
+                System.err.println("Error parsing distance for " + countryA + " and " + countryB);
+                continue; // Skip this line if the distance cannot be parsed
+            }
+
+            System.out.println("Parsed distance: " + distance);
 
             capitalDistances.computeIfAbsent(countryA, k -> new HashMap<>()).put(countryB, distance);
             capitalDistances.computeIfAbsent(countryB, k -> new HashMap<>()).put(countryA, distance);
         }
         br.close();
     }
+
     private void loadCountryCodes(String filePath) throws IOException {
         File file = new File(filePath);
         BufferedReader br = new BufferedReader(new FileReader(file));
@@ -73,32 +86,36 @@ public class CountryDataLoader {
 
     // Method to parse and add border information for each country
     private void addBorderInfo(String borderData) {
-        System.out.println("Processing border data: " + borderData); // Debug statement
+        System.out.println("Processing border data: " + borderData);
 
         String[] parts = borderData.split(" = ");
         String country = parts[0];
         List<Border> borders = new ArrayList<>();
 
         // Handling alias names
-        String[] countryNames = country.split(" \\("); // Splits "Turkey (Turkiye)" into ["Turkey ", "Turkiye)"]
-        String mainCountryName = countryNames[0].trim(); // "Turkey"
-        String aliasCountryName = countryNames.length > 1 ? countryNames[1].replace(")", "").trim() : null; // "Turkiye"
+        String[] countryNames = country.split(" \\(");
+        String mainCountryName = countryNames[0].trim();
+        String aliasCountryName = countryNames.length > 1 ? countryNames[1].replace(")", "").trim() : null;
 
         if (parts.length > 1) {
             String[] borderingCountries = parts[1].split(";");
             for (String border : borderingCountries) {
-                System.out.println("Processing border: " + border); // Debug statement
-                String[] borderInfo = border.trim().split(" ");
-                String borderCountry = borderInfo[0];
+                System.out.println("Processing border: " + border);
 
-                if (borderInfo.length > 1) {
-                    String distanceStr = borderInfo[1].split("km")[0].trim().replace(",", "");
-                    System.out.println("Parsed distance string: " + distanceStr); // Debug statement
-                    int distance = Integer.parseInt(distanceStr);
-                    borders.add(new Border(borderCountry, distance));
-                } else {
-                    borders.add(new Border(borderCountry, 0));
+                // Extract the distance and country name
+                int lastKmIndex = border.lastIndexOf(" km");
+                if (lastKmIndex == -1) {
+                    continue; // Skip if no "km" found
                 }
+
+                String borderCountry = border.substring(0, lastKmIndex).trim();
+                String distanceStr = border.substring(lastKmIndex).replaceAll("[^0-9]", ""); // Remove all non-numeric characters
+
+                System.out.println("Parsed border country: " + borderCountry);
+                System.out.println("Parsed distance string: " + distanceStr);
+
+                int distance = distanceStr.isEmpty() ? 0 : Integer.parseInt(distanceStr);
+                borders.add(new Border(borderCountry, distance));
             }
         }
 
@@ -107,6 +124,7 @@ public class CountryDataLoader {
             bordersMap.put(aliasCountryName, borders);
         }
     }
+
 
     // Getters for the data structures
     public HashMap<String, List<Border>> getBordersMap() {
