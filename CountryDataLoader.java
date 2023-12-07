@@ -61,29 +61,38 @@ public class CountryDataLoader {
         BufferedReader br = new BufferedReader(new FileReader(file));
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         String line;
-        boolean firstLine = true; // To skip the header if it exists
+        boolean firstLine = true;
+
+        HashMap<String, String[]> latestCountryData = new HashMap<>();
 
         while ((line = br.readLine()) != null) {
             if (firstLine) {
                 firstLine = false;
-                continue; // Skip the header line
+                continue;
             }
 
             String[] data = line.split("\t");
-            String countryCode = data[1]; // Assuming this is the country code
-            String countryName = data[2]; // Assuming this is the country name
+            if (data.length < 5) continue;
+
+            String countryCode = data[1].trim();
+            String countryName = data[2].trim();
+            String endDateStr = data[4].trim();
 
             try {
-                // Parse the end date to ensure it's a valid date
-                Date endDate = sdf.parse(data[4]);
-                // Add the country code and name to your data structure
-                // ...
+                Date endDate = sdf.parse(endDateStr);
+                String[] existingEntry = latestCountryData.get(countryCode);
+                if (existingEntry == null || sdf.parse(existingEntry[1]).before(endDate)) {
+                    latestCountryData.put(countryCode, new String[]{countryName, endDateStr});
+                }
             } catch (ParseException e) {
                 System.err.println("Error parsing date for country: " + countryName);
-                continue; // Skip this line if the date cannot be parsed
             }
         }
         br.close();
+
+        for (String code : latestCountryData.keySet()) {
+            countryCodes.put(code, latestCountryData.get(code)[0].toLowerCase());
+        }
     }
 
 
@@ -143,18 +152,17 @@ public class CountryDataLoader {
     }
 
     // Inner class to represent borders
-    public static class Border {
-        private final String country;
-        private final int distance;
+    public class Border {
+        private String borderCountry;
+        private int distance;
 
-        public Border(String country, int distance) {
-            this.country = country;
+        public Border(String borderCountry, int distance) {
+            this.borderCountry = borderCountry;
             this.distance = distance;
         }
 
-        // Getters
-        public String getCountry() {
-            return country;
+        public String getBorderCountry() {
+            return borderCountry;
         }
 
         public int getDistance() {
