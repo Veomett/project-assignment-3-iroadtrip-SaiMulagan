@@ -28,9 +28,13 @@ public class IRoadTrip {
 
         HashMap<String, Integer> distances = dataLoader.getCapitalDistances().get(country1);
         if (distances != null && distances.containsKey(country2)) {
-            return distances.get(country2);
+            int distance = distances.get(country2);
+            System.out.println("Distance between " + country1 + " and " + country2 + ": " + distance);
+            return distance;
+        } else {
+            System.out.println("No direct distance found between " + country1 + " and " + country2);
+            return -1;
         }
-        return -1;
     }
 
     public List<String> findPath(String country1, String country2) {
@@ -41,11 +45,11 @@ public class IRoadTrip {
         Map<String, String> predecessors = new HashMap<>();
         PriorityQueue<Node> queue = new PriorityQueue<>(Comparator.comparingInt(n -> n.distance));
 
-        // Initialize distances and queue
         for (String country : validCountries) {
             distances.put(country, Integer.MAX_VALUE);
             predecessors.put(country, null);
         }
+
         distances.put(country1, 0);
         queue.add(new Node(country1, 0));
 
@@ -53,39 +57,62 @@ public class IRoadTrip {
             Node current = queue.poll();
             System.out.println("Processing: " + current.countryName + " with distance " + current.distance);
 
-            // Destination reached
             if (current.countryName.equals(country2)) {
-                break;
+                break; // Destination reached
             }
 
-            // Process each neighbor
-            for (CountryDataLoader.Border border : dataLoader.getBordersMap().getOrDefault(current.countryName, Collections.emptyList())) {
-                String neighbor = border.getBorderCountry();
-                int newDist = current.distance + border.getDistance();
+            List<CountryDataLoader.Border> neighbors = dataLoader.getBordersMap().get(current.countryName);
+            if (neighbors == null || neighbors.isEmpty()) {
+                System.out.println("No neighbors found for " + current.countryName);
+                continue;
+            }
 
-                // Update if shorter path is found
+            for (CountryDataLoader.Border border : neighbors) {
+                String neighbor = border.getBorderCountry().toLowerCase(); // Convert to lowercase
+                System.out.println("Checking neighbor: " + neighbor);
+                if (!validCountries.contains(neighbor)) {
+                    System.out.println("Neighbor not in valid countries: " + neighbor);
+                    continue;
+                }
+
+                int newDist = current.distance + border.getDistance();
+                System.out.println("Neighbor: " + neighbor + ", New Distance: " + newDist);
+
                 if (newDist < distances.get(neighbor)) {
                     distances.put(neighbor, newDist);
                     predecessors.put(neighbor, current.countryName);
                     queue.add(new Node(neighbor, newDist));
-                    System.out.println("Updating path: " + neighbor + " with new distance " + newDist);
                 }
             }
         }
 
-        return reconstructPath(predecessors, country1, country2);
+        return reconstructPath(predecessors, distances, country1, country2);
     }
 
-    private List<String> reconstructPath(Map<String, String> predecessors, String start, String end) {
+    private List<String> reconstructPath(Map<String, String> predecessors, Map<String, Integer> distances, String start, String end) {
         LinkedList<String> path = new LinkedList<>();
-        for (String at = end; at != null && !at.equals(start); at = predecessors.get(at)) {
-            path.addFirst(at);
-        }
-        path.addFirst(start);
+        String at = end;
 
-        if (!path.isEmpty() && path.getFirst().equals(start)) {
-            return path;
+        while (at != null && !at.equals(start)) {
+            path.addFirst(at);
+            at = predecessors.get(at);
         }
+
+        if (at != null && at.equals(start)) {
+            path.addFirst(start);
+            // Build path string with distances
+            List<String> fullPath = new ArrayList<>();
+            String prev = null;
+            for (String country : path) {
+                if (prev != null) {
+                    int distance = distances.get(country) - distances.get(prev);
+                    fullPath.add(prev + " --> " + country + " (" + distance + " km.)");
+                }
+                prev = country;
+            }
+            return fullPath;
+        }
+
         return Collections.emptyList(); // No path found
     }
 

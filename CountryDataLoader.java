@@ -99,45 +99,31 @@ public class CountryDataLoader {
 
     // Method to parse and add border information for each country
     private void addBorderInfo(String borderData) {
-        System.out.println("Processing border data: " + borderData);
-
         String[] parts = borderData.split(" = ");
-        String country = parts[0];
+        String country = parts[0].trim();
         List<Border> borders = new ArrayList<>();
-
-        // Handling alias names
-        String[] countryNames = country.split(" \\(");
-        String mainCountryName = countryNames[0].trim();
-        String aliasCountryName = countryNames.length > 1 ? countryNames[1].replace(")", "").trim() : null;
 
         if (parts.length > 1) {
             String[] borderingCountries = parts[1].split(";");
             for (String border : borderingCountries) {
-                System.out.println("Processing border: " + border);
+                String[] borderParts = border.trim().split(" ");
+                if (borderParts.length < 2) continue;
 
-                // Extract the distance and country name
-                int lastKmIndex = border.lastIndexOf(" km");
-                if (lastKmIndex == -1) {
-                    continue; // Skip if no "km" found
+                String borderCountry = borderParts[0];
+                int distance;
+                try {
+                    distance = Integer.parseInt(borderParts[1]);
+                } catch (NumberFormatException e) {
+                    System.err.println("Invalid distance for border: " + border);
+                    continue;
                 }
 
-                String borderCountry = border.substring(0, lastKmIndex).trim();
-                String distanceStr = border.substring(lastKmIndex).replaceAll("[^0-9]", ""); // Remove all non-numeric characters
-
-                System.out.println("Parsed border country: " + borderCountry);
-                System.out.println("Parsed distance string: " + distanceStr);
-
-                int distance = distanceStr.isEmpty() ? 0 : Integer.parseInt(distanceStr);
-                borders.add(new Border(borderCountry, distance));
+                borders.add(new Border(borderCountry.toLowerCase(), distance));
+                System.out.println(country + " -> " + borderCountry + " " + distance + " km");
             }
         }
 
-        bordersMap.put(mainCountryName, borders);
-        if (aliasCountryName != null) {
-            bordersMap.put(aliasCountryName, borders);
-        }
-        System.out.println("Added borders for: " + mainCountryName + " - " + borders);
-
+        bordersMap.put(country.toLowerCase(), borders);
     }
 
     public void printBordersMap() {
